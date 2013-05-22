@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_javafx_try" default="compile.module.javafx_try">
+  <dirname property="module.javafx_try.basedir" file="${ant.file.module_javafx_try}"/>
+  
+  <property name="module.jdk.home.javafx_try" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.javafx_try" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.javafx_try" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.javafx_try" value="${compiler.args}"/>
+  
+  <property name="javafx_try.output.dir" value="${module.javafx_try.basedir}/out/production/JavaFX_Try"/>
+  <property name="javafx_try.testoutput.dir" value="${module.javafx_try.basedir}/out/test/JavaFX_Try"/>
+  
+  <path id="javafx_try.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="javafx_try.module.production.classpath">
+    <path refid="${module.jdk.classpath.javafx_try}"/>
+    <path refid="library.jtransforms-2.4.classpath"/>
+  </path>
+  
+  <path id="javafx_try.runtime.production.module.classpath">
+    <pathelement location="${javafx_try.output.dir}"/>
+    <path refid="library.jtransforms-2.4.classpath"/>
+  </path>
+  
+  <path id="javafx_try.module.classpath">
+    <path refid="${module.jdk.classpath.javafx_try}"/>
+    <pathelement location="${javafx_try.output.dir}"/>
+    <path refid="library.jtransforms-2.4.classpath"/>
+  </path>
+  
+  <path id="javafx_try.runtime.module.classpath">
+    <pathelement location="${javafx_try.testoutput.dir}"/>
+    <pathelement location="${javafx_try.output.dir}"/>
+    <path refid="library.jtransforms-2.4.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.javafx_try">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.javafx_try">
+    <patternset refid="excluded.from.module.javafx_try"/>
+  </patternset>
+  
+  <path id="javafx_try.module.sourcepath">
+    <dirset dir="${module.javafx_try.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.javafx_try" depends="compile.module.javafx_try.production,compile.module.javafx_try.tests" description="Compile module JavaFX_Try"/>
+  
+  <target name="compile.module.javafx_try.production" depends="register.custom.compilers" description="Compile module JavaFX_Try; production classes">
+    <mkdir dir="${javafx_try.output.dir}"/>
+    <javac2 destdir="${javafx_try.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.javafx_try}/javac">
+      <compilerarg line="${compiler.args.javafx_try}"/>
+      <bootclasspath refid="javafx_try.module.bootclasspath"/>
+      <classpath refid="javafx_try.module.production.classpath"/>
+      <src refid="javafx_try.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.javafx_try"/>
+    </javac2>
+    
+    <copy todir="${javafx_try.output.dir}">
+      <fileset dir="${module.javafx_try.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.javafx_try.tests" depends="register.custom.compilers,compile.module.javafx_try.production" description="compile module JavaFX_Try; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.javafx_try" description="cleanup module">
+    <delete dir="${javafx_try.output.dir}"/>
+    <delete dir="${javafx_try.testoutput.dir}"/>
+  </target>
+</project>
