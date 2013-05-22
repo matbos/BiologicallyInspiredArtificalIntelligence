@@ -60,37 +60,7 @@ public class InputManager {
             // TODO: niepoprawny plik został załadowany, poprawny rozmiar to 200x200 px, obsłużyć to
             return;
         }
-       /*
-        for(int i =0; i<img.getWidth();++i)
-            for(int j=0; j<img.getHeight();++j){
-                // getRGB returns TYPE_INT_ARGB which hold 8bit values in this manner: RGBA
-                redTT[i][j] = Float.intBitsToFloat((img.getRGB(i, j) & (255 << 24)) >> 24);
-                greenTT[i][j] = Float.intBitsToFloat((img.getRGB(i, j) & (255 << 16)) >> 16);
-                greenTT[i][j] = Float.intBitsToFloat((img.getRGB(i, j) & (255 << 8)) >> 8);
-            }
 
-        FloatFFT_2D fft = new FloatFFT_2D(200,200);
-        fft.realForwardFull(redTT);
-        fft.realForwardFull(blueTT);
-        fft.realForwardFull(greenTT);
-
-        // save transform to image!
-        for(int i =0; i<img.getWidth();++i)
-            for(int j=0; j<img.getHeight();++j){
-                transform[i*200+j] = ((byte)redTT[200+i][j] << 24) +  ((byte)greenTT[200+i][j] << 16) + ((byte)blueTT[200+i][j] << 8);
-            }
-
-
-        BufferedImage bim = new BufferedImage(200,200,BufferedImage.TYPE_INT_ARGB);
-        bim.setRGB(0,0,200,200,transform,0,200);
-
-        File file = new File("image1234.bmp");
-        try {
-            ImageIO.write(bim,"bmp",file);
-        } catch (IOException e){
-             System.out.write(123);
-        }
-        */
         feedNetwork();
     }
     public void feedImage(BufferedImage img){

@@ -14,22 +14,27 @@ public class OutputNeuron extends Neuron {
 
     public OutputNeuron() {
         super();
+     //   this.inputs.add(new Slot(new BiasNeuron(),Math.random()));
     }
 
     public OutputNeuron(int inputs) {
-        super(inputs);
+        super(inputs+1);
+    //    this.inputs.add(new Slot(new BiasNeuron(),Math.random()));
     }
 
     public OutputNeuron(int inputs, int outputs) {
-        super(inputs,outputs);
+        super(inputs+1,outputs);
+    //    this.inputs.add(new Slot(new BiasNeuron(),Math.random()));
     }
 
     public OutputNeuron(ArrayList<Slot> inputs, ArrayList<INeuron> outputs) {
         super(inputs, outputs);
+     //   this.inputs.add(new Slot(new BiasNeuron(),Math.random()));
     }
 
     public OutputNeuron(ArrayList<INeuron> inputs) {
         super(inputs);
+     //   this.inputs.add(new Slot(new BiasNeuron(),Math.random()));
     }
 
 

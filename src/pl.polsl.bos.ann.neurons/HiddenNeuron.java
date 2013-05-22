@@ -15,22 +15,27 @@ public class HiddenNeuron extends Neuron {
 
     public HiddenNeuron() {
         super();
+       // inputs.add(new Slot(new BiasNeuron(),Math.random()));
     }
 
     public HiddenNeuron(int inputs) {
-        super(inputs);
+        super(inputs+1);
+      //  this.inputs.add(new Slot(new BiasNeuron(),Math.random()));
     }
 
     public HiddenNeuron(int inputs, int outputs) {
-        super(inputs,outputs);
+        super(inputs+1,outputs);
+      //  this.inputs.add(new Slot(new BiasNeuron(),Math.random()));
     }
 
     public HiddenNeuron(ArrayList<Slot> inputs, ArrayList<INeuron> outputs) {
         super(inputs, outputs);
+      //  this.inputs.add(new Slot(new BiasNeuron(),Math.random()));
     }
 
     public HiddenNeuron(ArrayList<INeuron> inputs) {
         super(inputs);
+      //  this.inputs.add(new Slot(new BiasNeuron(),Math.random()));
     }
 
     @Override

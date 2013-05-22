@@ -149,6 +149,7 @@ public class NetManager {
             if (allNeuronsHaveErrorLessThan(0.0009))
                 break;
         }
+        System.out.println("Iteracji: "+i);
         compareError(0.0009);
         for (int j = 0; j <= 15; ++j) {
             inputManager.feedImage(images[j]);

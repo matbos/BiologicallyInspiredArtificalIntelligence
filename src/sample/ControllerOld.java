@@ -1,19 +1,12 @@
 package sample;
 
-import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.Dragboard;
-import pl.polsl.bos.ann.InputManager;
-
 import javafx.scene.image.ImageView;
-import sun.security.util.Resources;
 
-import java.awt.event.ActionEvent;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class Controller implements Initializable {
+public class ControllerOld implements Initializable {
     ImageView trI = null;
 /*
     @FXML protected void originalDropped(DragEvent event) {
