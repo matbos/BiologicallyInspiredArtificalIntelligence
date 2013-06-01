@@ -78,7 +78,7 @@ public class InputManager {
         //TODO: Dynamiczny podział obrazka na części
         double values[] = new double[1600];
         for(int counter = 0,  i=0; i<200; i+=5){
-            for(int j = 0; j<200;j+=5){
+            for(int j = 0; j<200; j+=5){
                values[counter++] = sumPixels(i,j);
             }
         }
@@ -91,7 +91,7 @@ public class InputManager {
             for(int j = 0; j<5;++j){
                 Color color = new Color(image.getRGB(x+i,y+j));
                 if(color.getRed()== 0xFF && color.getGreen()==0x80 && color.getBlue()==0x80){
-                    value += 0.04;
+                    value += 0.16;
                 }
             }
         }

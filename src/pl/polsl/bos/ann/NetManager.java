@@ -288,7 +288,7 @@ public class NetManager {
             System.out.println(e.getStackTrace());
         }
         if (img.getWidth() != 200 || img.getWidth() != img.getHeight()) {
-            // TODO: niepoprawny plik został załadowany, poprawny rozmiar to 200x200 px, obsłużyć to
+            // TODO: niepoprawny plik został załadowany, poprawny rozmiar to 200x200 px,  obsłużyć to
             throw new RuntimeException("Niepoprawna wielkość obrazka! " + path);
         }
         return img;
