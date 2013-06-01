@@ -1,7 +1,9 @@
 package pl.polsl.bos.ann;
 
+import com.tomgibara.CannyEdgeDetector;
 import pl.polsl.bos.ann.exceptions.ErrorValueNotCalculatedException;
 import pl.polsl.bos.ann.neurons.*;
+import pl.polsl.bos.ui.Controller;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -20,6 +22,8 @@ public class NetManager {
     private ArrayList<ArrayList<INeuron>> layers;
     private InputManager inputManager;
     private final boolean DETAILS = false;
+    private double errorSQ = 0.0D;
+    private String[] outputMappings;
 
     public NetManager() {
         this.layers = new ArrayList<ArrayList<INeuron>>(3);
@@ -29,6 +33,7 @@ public class NetManager {
     public NetManager(int inputCount, int hiddenCount, int outputCount) {
         this();
         initialize2LayerNeuralNet(inputCount, hiddenCount, outputCount);
+        outputMappings = new String[outputCount];
     }
 
     /**
@@ -95,18 +100,73 @@ public class NetManager {
             n.setOutputs(output);
         }
         inputManager.setInputNeurons(inputLayer());
-        /*TODO: Dodaj tutaj propagację następnych elementów w sieci zaczynając od warstwy wyjściowej trzeba dodać odpowiednie metody w neuronach aby powiadamiały  swoim istnieniu wszystkich poprzedników.
-                Przemyśl to!
-        */
     }
 
-    public void teach(BufferedImage image, double desiredOutput[]) {
-        inputManager.feedImage(image);
+    public void performTeaching(float lowTh,float highTh, File directory, double maxError, int iterations,Controller controller) {
+        int numberOfOutputs, i=0;
+        DirectoryList[] structure;
 
-    }
+        File directories[] = directory.listFiles();
+        numberOfOutputs = countDirectories(directories);
+        directories =  clearNonDirectories(directories, numberOfOutputs);
+        structure = new DirectoryList[numberOfOutputs];
 
-    public void performTeaching() {
-        BufferedImage images[] = new BufferedImage[16];
+        i=0;
+        int j = 0;
+        for(File dir : directories){
+
+            File edgedDir = new File(dir.getAbsolutePath().concat("/Edged"));
+
+            if(!edgedDir.mkdir())
+            {
+                // OBSŁUGA BRAKU MOŻLIWOŚCI STWORZENIA FOLDERU
+            }
+
+            File[] images = dir.listFiles();
+            structure[i] = new DirectoryList(dir.getName(),getArrayWithOne(i,structure.length),images);
+            outputMappings[j++] = dir.getName();
+            DirectoryList thisDirectory = structure[i++];
+
+            for  (File imageFile : images){
+                if (!imageFile.isFile())
+                    continue;
+                try {
+                    File edgedImageFile = new File(edgedDir.getAbsolutePath().concat("/"+imageFile.getName()));
+                    BufferedImage image = ImageIO.read(imageFile);
+                    if (image == null ){
+                        System.out.println(" NULL IMAGE with : "+ imageFile.getAbsolutePath());
+                        continue;
+                    }
+                    if(image.getHeight() != 200 || image.getWidth() != 200){
+                        System.out.println(" Image with inappropriate size! : "+ imageFile.getAbsolutePath());
+                        continue;
+                    }
+                    CannyEdgeDetector edgeDetector = new CannyEdgeDetector();
+                    edgeDetector.setLowThreshold(lowTh);
+                    edgeDetector.setHighThreshold(highTh);
+                    edgeDetector.setSourceImage(image);
+                    edgeDetector.process();
+                    BufferedImage edgedImage = edgeDetector.getEdgesImage();
+                    thisDirectory.addImage(edgedImage);
+                    ImageIO.write(edgedImage,"jpg",edgedImageFile);
+                } catch (IOException e) {
+                    System.err.print(imageFile.getAbsolutePath()+ " |||| " + e.getMessage());
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                } catch (Exception e ) {
+                    System.err.println("-----------------");
+                    System.err.println(e.getMessage());
+                    System.err.println("-----------------");
+                    e.printStackTrace();
+                    System.err.println("-----------------");
+                    throw new RuntimeException(imageFile.getAbsolutePath(),e);
+                }
+
+            }
+            System.out.println(dir.getAbsolutePath()+" skończona!");
+        }
+        System.out.println("DONE!");
+
+/*        BufferedImage images[] = new BufferedImage[16];
         double[][] outcomes = new double[16][];
         int i = 0;
         images[i] = helperLoadImage("C:\\test\\0000.bmp");
@@ -141,23 +201,36 @@ public class NetManager {
         outcomes[i++] = convertDecimalTo1ofSizeArray(14, 16);
         images[i] = helperLoadImage("C:\\test\\1111.bmp");
         outcomes[i++] = convertDecimalTo1ofSizeArray(15, 16);
+        */
         //wlasciwe uczenie sieci
-        for (i = 0; i < 5000000; ++i) {
-            inputManager.feedImage(images[i % 16]);
+        for (i = 0; i < iterations; ++i) {
+            inputManager.feedImage(structure[i % structure.length].getNextImage());
             propagateSignalToOutput();
-            introduceCorrections(outcomes[i % 16]);
-            if (allNeuronsHaveErrorLessThan(0.0009))
+            introduceCorrections(structure[i%structure.length].getProperOutcome());
+            //if (allNeuronsHaveErrorLessThan(maxError))
+            //    break;
+            if((errorSQ - maxError) <= 0.0)
                 break;
+            if(i%100 == 0){
+                controller.giveFeedback(i,errorSQ);
+                System.err.print(".");
+            }
         }
         System.out.println("Iteracji: "+i);
-        compareError(0.0009);
-        for (int j = 0; j <= 15; ++j) {
-            inputManager.feedImage(images[j]);
-            propagateSignalToOutput();
-            printResult(j);
-        }
+        compareError(maxError);
+        controller.giveFeedback(i,errorSQ);
+//        for (int j = 0; j <= 15; ++j) {
+//            inputManager.feedImage(images[j]);
+//            propagateSignalToOutput();
+//            printResult(j);
+//        }
     }
 
+    public String recognizeImage(BufferedImage image){
+        inputManager.feedImage(image);
+        propagateSignalToOutput();
+        return outputMappings[determineBestMatch()];
+    }
     private void printResult(int correct) {
         int i;
         double outcome[] = gatherOutputSignals();
@@ -196,10 +269,12 @@ public class NetManager {
 
     private void introduceCorrections(double correctVector[]) {
         int j = 0;
+        errorSQ = 0.0D;
         for (INeuron n : outputLayer()) {
-            n.recalculateError(correctVector[j++]);
-
+            double error = n.recalculateError(correctVector[j]);
+            errorSQ += Math.pow((correctVector[j++]-error),2.0D);
         }
+        errorSQ *= 0.5D;
         for (INeuron n : hiddenLayer())
             n.recalculateError(0); // passed value is not important since, in this layer correct value is calucated.
     }
@@ -219,13 +294,7 @@ public class NetManager {
         return img;
     }
 
-    private double[] convertDecimalTo1ofSizeArray(int number, int size) {
-        double array[] = new double[size];
-        for (int i = 0; i < size; ++i)
-            array[i] = 0d;
-        array[number] = 1d;
-        return array;
-    }
+
 
     private double[] gatherOutputSignals() {
         double output[] = new double[outputLayer().size()];
@@ -266,4 +335,53 @@ public class NetManager {
         }
         System.out.println("########################################");
     }
+
+    private double[] getArrayWithOne(int i, int size){
+        double array[] = new double[size];
+        for(int j  =0; j < size; ++j)
+            array[j] = 0f;
+        array[i] = 1f;
+        return array;
+    }
+
+    private double[] convertDecimalTo1ofSizeArray(int number, int size) {
+        double array[] = new double[size];
+        for (int i = 0; i < size; ++i)
+            array[i] = 0d;
+        array[number] = 1d;
+        return array;
+    }
+
+    static public int countDirectories(File[] files){
+        int count =0;
+        for(File f : files)
+            if(f.isDirectory())
+                count++;
+        return  count;
+    }
+
+    private File[] clearNonDirectories(File[] list, int numberOfDirectories){
+        File[] directories = new File[numberOfDirectories];
+        int i=0;
+        for(File f : list){
+            if(f.isDirectory())
+                directories[i++] = f;
+        }
+        return directories;
+    }
+
+    private int determineBestMatch()     {
+        int output = 0, i=0;
+        double value = -1;
+        for(INeuron n : outputLayer()){
+            if(n.getValue() > value)
+            {
+                value = n.getValue();
+                output = i;
+            }
+            i++;
+        }
+        return output;
+    }
+
 }

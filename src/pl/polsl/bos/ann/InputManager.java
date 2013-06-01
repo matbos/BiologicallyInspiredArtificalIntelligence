@@ -71,19 +71,33 @@ public class InputManager {
     }
 
     private double[] sampleImage(){
+        // podzielić obraz na części 5x5 px
+        // jeśli w obrazie wystąpi pixel o kolorze ff8080
+        // to jego wartość to suma pixeli
         // narazie na sztywno ale trzeba to będzie poprawić
         //TODO: Dynamiczny podział obrazka na części
-        double values[] = new double[4];
-        Color color = new Color(image.getRGB(50, 25));
-        values[0] = (calculateBWValue(color) > 0.75) ? 0.85 : 0.1;
-        color = new Color(image.getRGB(150,50));
-        values[1] = (calculateBWValue(color) > 0.75) ? 0.85 : 0.1;
-        color = new Color(image.getRGB(50,150));
-        values[2] = (calculateBWValue(color) > 0.75) ? 0.85 : 0.1;
-        color = new Color(image.getRGB(150,150));
-        values[3] = (calculateBWValue(color) > 0.75) ? 0.85 : 0.1;
+        double values[] = new double[1600];
+        for(int counter = 0,  i=0; i<200; i+=5){
+            for(int j = 0; j<200;j+=5){
+               values[counter++] = sumPixels(i,j);
+            }
+        }
         return values;
     }
+
+    private double sumPixels(int x, int y){
+        double value = -2D;
+        for(int i=0; i<5; ++i){
+            for(int j = 0; j<5;++j){
+                Color color = new Color(image.getRGB(x+i,y+j));
+                if(color.getRed()== 0xFF && color.getGreen()==0x80 && color.getBlue()==0x80){
+                    value += 0.04;
+                }
+            }
+        }
+        return value;
+    }
+
     private void feedNetwork(){
         int i=0;
         double samples[] = sampleImage();
