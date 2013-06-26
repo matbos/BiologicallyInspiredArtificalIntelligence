@@ -21,7 +21,7 @@ import javax.management.BadAttributeValueExpException;
  */
 public class InputManager {
 
-    private ArrayList<INeuron> inputNeurons;
+    /*private ArrayList<INeuron> inputNeurons;
     private BufferedImage image = null;
 
     public InputManager(ArrayList<INeuron> input){
@@ -33,11 +33,13 @@ public class InputManager {
     public void setInputNeurons(ArrayList<INeuron> list ){
         this.inputNeurons = list;
     }
+    */
     /**
      * Method does not return the outcome, in order to get one
      * invoke getResult() method.
      * @param pathToImage
      */
+    /*
     public void feedImage(String pathToImage){
       //  double[][] tileValues = new double[40][40];
       //  float[][] redTT = new float[400][400];
@@ -68,24 +70,22 @@ public class InputManager {
             throw new RuntimeException("image was null, not nice!");
         image = img;
         feedNetwork();
-    }
+    }*/
 
-    private double[] sampleImage(){
+    static public double[] sampleImage(BufferedImage image){
         // podzielić obraz na części 5x5 px
         // jeśli w obrazie wystąpi pixel o kolorze ff8080
         // to jego wartość to suma pixeli
-        // narazie na sztywno ale trzeba to będzie poprawić
-        //TODO: Dynamiczny podział obrazka na części
         double values[] = new double[1600];
         for(int counter = 0,  i=0; i<200; i+=5){
             for(int j = 0; j<200; j+=5){
-               values[counter++] = sumPixels(i,j);
+               values[counter++] = sumPixels(i,j,image);
             }
         }
         return values;
     }
 
-    private double sumPixels(int x, int y){
+    static public double sumPixels(int x, int y, BufferedImage image){
         double value = -2D;
         for(int i=0; i<5; ++i){
             for(int j = 0; j<5;++j){
@@ -98,15 +98,12 @@ public class InputManager {
         return value;
     }
 
-    private void feedNetwork(){
+    /*private void feedNetwork(){
         int i=0;
         double samples[] = sampleImage();
         for( INeuron n : inputNeurons){
             ((InputNeuron) n).setValue(samples[i++]);
         }
     }
-
-    private double calculateBWValue(Color color){
-        return 0.33d*color.getRed()+ 0.33d*color.getGreen() + 0.34d*color.getBlue();
-    }
+      */
 }

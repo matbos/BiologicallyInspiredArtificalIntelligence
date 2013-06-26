@@ -32,7 +32,7 @@ public class NetManager {
 
     public NetManager(int inputCount, int hiddenCount, int outputCount) {
         this();
-        initialize2LayerNeuralNet(inputCount, hiddenCount, outputCount);
+        //initialize2LayerNeuralNet(inputCount, hiddenCount, outputCount);
         outputMappings = new String[outputCount];
     }
 
@@ -65,7 +65,7 @@ public class NetManager {
     public ArrayList<INeuron> outputLayer() {
         return layers.get(layers.size() - 1);
     }
-
+   /*
     /**
      * Creates neutral network with two layers and proper amount of neurons on each,
      * connected all-to-all between layers
@@ -74,6 +74,7 @@ public class NetManager {
      * @param hiddenCount number of hidden nodes
      * @param outputCount number of output nodes
      */
+    /*
     public void initialize2LayerNeuralNet(int inputCount, int hiddenCount, int outputCount) {
         // Initialize layers to be ready for proper amounts of neurons
         layers.add(new ArrayList<INeuron>(inputCount));
@@ -101,6 +102,7 @@ public class NetManager {
         }
         inputManager.setInputNeurons(inputLayer());
     }
+    */
 
     public void performTeaching(float lowTh,float highTh, File directory, double maxError, int iterations,Controller controller) {
         int numberOfOutputs, i=0;
@@ -204,7 +206,7 @@ public class NetManager {
         */
         //wlasciwe uczenie sieci
         for (i = 0; i < iterations; ++i) {
-            inputManager.feedImage(structure[i % structure.length].getNextImage());
+            //inputManager.feedImage(structure[i % structure.length].getNextImage());
             propagateSignalToOutput();
             introduceCorrections(structure[i%structure.length].getProperOutcome());
             //if (allNeuronsHaveErrorLessThan(maxError))
@@ -227,7 +229,7 @@ public class NetManager {
     }
 
     public String recognizeImage(BufferedImage image){
-        inputManager.feedImage(image);
+       // inputManager.feedImage(image);
         propagateSignalToOutput();
         return outputMappings[determineBestMatch()];
     }
@@ -336,7 +338,7 @@ public class NetManager {
         System.out.println("########################################");
     }
 
-    private double[] getArrayWithOne(int i, int size){
+    static public double[] getArrayWithOne(int i, int size){
         double array[] = new double[size];
         for(int j  =0; j < size; ++j)
             array[j] = 0f;
@@ -360,7 +362,7 @@ public class NetManager {
         return  count;
     }
 
-    private File[] clearNonDirectories(File[] list, int numberOfDirectories){
+    static public File[] clearNonDirectories(File[] list, int numberOfDirectories){
         File[] directories = new File[numberOfDirectories];
         int i=0;
         for(File f : list){

@@ -8,6 +8,7 @@
     <orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="jtransforms-2.4" level="project" />
+    <orderEntry type="library" name="neuroph-2" level="project" />
   </component>
 </module>
 

@@ -14,11 +14,18 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Tab;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.InputMethodTextRun;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.scene.control.TextField;
 import javafx.stage.Window;
+import org.neuroph.core.NeuralNetwork;
+import org.neuroph.core.learning.DataSet;
+import org.neuroph.nnet.Perceptron;
+import org.neuroph.util.TransferFunctionType;
+import pl.polsl.bos.ann.DirectoryList;
+import pl.polsl.bos.ann.InputManager;
 import pl.polsl.bos.ann.NetManager;
 
 import javax.imageio.ImageIO;
@@ -67,6 +74,8 @@ public class Controller
     private int maxIterations = 0;
 
     private LineChart.Series series;
+
+    private  NeuralNetwork network;
 
     @Override // This method is called by the FXMLLoader when initialization is complete
     public void initialize(URL fxmlFileLocation, ResourceBundle resources) {
@@ -168,8 +177,15 @@ public class Controller
         WritableImage writableImage = new WritableImage(edges.getWidth(), edges.getHeight());
         SwingFXUtils.toFXImage(edges, writableImage);
         edgedImage.setImage(writableImage);
-        String str = networkManager.recognizeImage(edges);
-        System.out.println("THIS IS "+str);
+        double[] input = InputManager.sampleImage(edges);
+        network.setInput(input);
+        network.calculate();
+        double[] output = network.getOutput();
+        //String str = networkManager.recognizeImage(edges);
+        System.out.print("THIS IS [");
+        for(double d : output)
+            System.out.print(""+d+",");
+        System.out.println("]");
 
     }
 
@@ -180,10 +196,74 @@ public class Controller
         File directory = pickDirectory(numberOfHiddenNeuronTextField.getScene().getWindow());
         if(directory == null)
             return;
-        maxIterations = Integer.valueOf(iterationsTextField.getText());
+
         int outputCount = NetManager.countDirectories(directory.listFiles());
-        networkManager = new NetManager(1600,Integer.valueOf(numberOfHiddenNeuronTextField.getText()),outputCount);
-        networkManager.performTeaching(lowTH,highTH,directory,error,maxIterations,this);
+        DataSet trainingSet = new DataSet(1600,outputCount);
+
+        // wykrywanie krawędzi
+        int numberOfOutputs, i=0;
+        DirectoryList[] structure;
+
+        File directories[] = directory.listFiles();
+        numberOfOutputs = NetManager.countDirectories(directories);
+        directories =  NetManager.clearNonDirectories(directories, numberOfOutputs);
+        structure = new DirectoryList[numberOfOutputs];
+        i = 0;
+        for(File dir : directory.listFiles()){
+            //File edgedDir = new File(dir.getAbsolutePath().concat("/Edged"));
+            //if(!edgedDir.mkdir())
+            //{
+                // OBSŁUGA BRAKU MOŻLIWOŚCI STWORZENIA FOLDERU
+            //}
+            File[] images = dir.listFiles();
+            double[] output =  NetManager.getArrayWithOne(i, structure.length);
+            for  (File imageFile : images){
+                if (!imageFile.isFile())
+                    continue;
+                try {
+                    //File edgedImageFile = new File(edgedDir.getAbsolutePath().concat("/"+imageFile.getName()));
+                    BufferedImage image = ImageIO.read(imageFile);
+                    if (image == null ){
+                        System.out.println(" NULL IMAGE with : "+ imageFile.getAbsolutePath());
+                        continue;
+                    }
+                    if(image.getHeight() != 200 || image.getWidth() != 200){
+                        System.out.println(" Image with inappropriate size! : "+ imageFile.getAbsolutePath());
+                        continue;
+                    }
+                    CannyEdgeDetector edgeDetector = new CannyEdgeDetector();
+                    edgeDetector.setLowThreshold(lowTH);
+                    edgeDetector.setHighThreshold(highTH);
+                    edgeDetector.setSourceImage(image);
+                    edgeDetector.process();
+                    BufferedImage edgedImage = edgeDetector.getEdgesImage();
+                    //thisDirectory.addImage(edgedImage);
+                    //ImageIO.write(edgedImage,"jpg",edgedImageFile);
+                    double[] input = InputManager.sampleImage(edgedImage);
+                    trainingSet.addRow(input,output);
+                } catch (IOException e) {
+                    System.err.print(imageFile.getAbsolutePath()+ " |||| " + e.getMessage());
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                } catch (Exception e ) {
+                    System.err.println("-----------------");
+                    System.err.println(e.getMessage());
+                    System.err.println("-----------------");
+                    e.printStackTrace();
+                    System.err.println("-----------------");
+                    throw new RuntimeException(imageFile.getAbsolutePath(),e);
+                }
+
+            }
+            System.out.println(dir.getAbsolutePath()+" skończona!");
+            i++;
+        }
+        System.out.println("DONE!");
+        // stworzenie sieci
+        maxIterations = Integer.valueOf(iterationsTextField.getText());
+        network = new Perceptron(1600,outputCount, TransferFunctionType.SIGMOID);
+        System.out.println("PRE!");
+        network.learn(trainingSet);
+        System.out.println("POST!");
         progressBar.setProgress(1.0);
     }
 
