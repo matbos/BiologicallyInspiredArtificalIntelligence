@@ -156,11 +156,9 @@ public abstract class Neuron implements INeuron {
     }
 
     protected double activationFunction(double argument) {
-        //return   1/(1 - Math.exp(-argument));
         return   1/(1+Math.exp(-betaValue*argument));
     }
     protected double activationFunctionDerivative(double argument) {
-        //return   (1/(Math.cosh(value)*Math.cosh(value)));
         return betaValue*activationFunction(argument)*(1-activationFunction(argument));
     }
 

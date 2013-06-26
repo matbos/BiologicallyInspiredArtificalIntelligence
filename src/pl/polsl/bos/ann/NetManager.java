@@ -6,6 +6,7 @@ import pl.polsl.bos.ann.neurons.*;
 import pl.polsl.bos.ui.Controller;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -24,7 +25,7 @@ public class NetManager {
     private final boolean DETAILS = false;
     private double errorSQ = 0.0D;
     private String[] outputMappings;
-
+    private ArrayList<Mapping> outputMapping;
     public NetManager() {
         this.layers = new ArrayList<ArrayList<INeuron>>(3);
         inputManager = new InputManager();
@@ -32,10 +33,21 @@ public class NetManager {
 
     public NetManager(int inputCount, int hiddenCount, int outputCount) {
         this();
-        //initialize2LayerNeuralNet(inputCount, hiddenCount, outputCount);
+        initialize2LayerNeuralNet(inputCount, hiddenCount, outputCount);
         outputMappings = new String[outputCount];
     }
 
+
+    public ArrayList<Mapping> getMakes() {
+        for(Mapping m : outputMapping){
+            try{
+                m.setError(outputLayer().get(m.getNumber()).getError());
+            } catch(ErrorValueNotCalculatedException e) {
+
+            }
+        }
+       return outputMapping;
+    }
     /**
      * Method returning list iterator for input layer
      *
@@ -65,7 +77,7 @@ public class NetManager {
     public ArrayList<INeuron> outputLayer() {
         return layers.get(layers.size() - 1);
     }
-   /*
+
     /**
      * Creates neutral network with two layers and proper amount of neurons on each,
      * connected all-to-all between layers
@@ -74,7 +86,6 @@ public class NetManager {
      * @param hiddenCount number of hidden nodes
      * @param outputCount number of output nodes
      */
-    /*
     public void initialize2LayerNeuralNet(int inputCount, int hiddenCount, int outputCount) {
         // Initialize layers to be ready for proper amounts of neurons
         layers.add(new ArrayList<INeuron>(inputCount));
@@ -102,12 +113,11 @@ public class NetManager {
         }
         inputManager.setInputNeurons(inputLayer());
     }
-    */
 
-    public void performTeaching(float lowTh,float highTh, File directory, double maxError, int iterations,Controller controller) {
+    public void performTeaching(File directory, double maxError, int iterations,Controller controller) {
         int numberOfOutputs, i=0;
         DirectoryList[] structure;
-
+        outputMapping = new ArrayList<Mapping>(5);
         File directories[] = directory.listFiles();
         numberOfOutputs = countDirectories(directories);
         directories =  clearNonDirectories(directories, numberOfOutputs);
@@ -115,6 +125,7 @@ public class NetManager {
 
         i=0;
         int j = 0;
+
         for(File dir : directories){
 
             File edgedDir = new File(dir.getAbsolutePath().concat("/Edged"));
@@ -124,8 +135,10 @@ public class NetManager {
                 // OBSŁUGA BRAKU MOŻLIWOŚCI STWORZENIA FOLDERU
             }
 
+
             File[] images = dir.listFiles();
             structure[i] = new DirectoryList(dir.getName(),getArrayWithOne(i,structure.length),images);
+            outputMapping.add(new Mapping(dir.getName(),i));
             outputMappings[j++] = dir.getName();
             DirectoryList thisDirectory = structure[i++];
 
@@ -143,17 +156,19 @@ public class NetManager {
                         System.out.println(" Image with inappropriate size! : "+ imageFile.getAbsolutePath());
                         continue;
                     }
-                    CannyEdgeDetector edgeDetector = new CannyEdgeDetector();
-                    edgeDetector.setLowThreshold(lowTh);
-                    edgeDetector.setHighThreshold(highTh);
-                    edgeDetector.setSourceImage(image);
-                    edgeDetector.process();
-                    BufferedImage edgedImage = edgeDetector.getEdgesImage();
-                    thisDirectory.addImage(edgedImage);
-                    ImageIO.write(edgedImage,"jpg",edgedImageFile);
+                        for(int x=0; x<image.getHeight(); ++x){
+                            for(int y = 0; y < image.getWidth();++y){
+                                Color color = new Color(image.getRGB(x,y));
+                                if(color.getRed()!= 0xFF || color.getGreen()!=0xFF || color.getBlue()!=0xFF){
+                                    image.setRGB(x,y,0);
+                                }
+                            }
+                        }
+                    thisDirectory.addImage(image);
+                    ImageIO.write(image,"jpg",edgedImageFile);
                 } catch (IOException e) {
                     System.err.print(imageFile.getAbsolutePath()+ " |||| " + e.getMessage());
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    e.printStackTrace();
                 } catch (Exception e ) {
                     System.err.println("-----------------");
                     System.err.println(e.getMessage());
@@ -168,49 +183,12 @@ public class NetManager {
         }
         System.out.println("DONE!");
 
-/*        BufferedImage images[] = new BufferedImage[16];
-        double[][] outcomes = new double[16][];
-        int i = 0;
-        images[i] = helperLoadImage("C:\\test\\0000.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(0, 16);
-        images[i] = helperLoadImage("C:\\test\\0001.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(1, 16);
-        images[i] = helperLoadImage("C:\\test\\0010.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(2, 16);
-        images[i] = helperLoadImage("C:\\test\\0011.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(3, 16);
-        images[i] = helperLoadImage("C:\\test\\0100.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(4, 16);
-        images[i] = helperLoadImage("C:\\test\\0101.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(5, 16);
-        images[i] = helperLoadImage("C:\\test\\0110.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(6, 16);
-        images[i] = helperLoadImage("C:\\test\\0111.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(7, 16);
-        images[i] = helperLoadImage("C:\\test\\1000.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(8, 16);
-        images[i] = helperLoadImage("C:\\test\\1001.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(9, 16);
-        images[i] = helperLoadImage("C:\\test\\1010.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(10, 16);
-        images[i] = helperLoadImage("C:\\test\\1011.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(11, 16);
-        images[i] = helperLoadImage("C:\\test\\1100.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(12, 16);
-        images[i] = helperLoadImage("C:\\test\\1101.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(13, 16);
-        images[i] = helperLoadImage("C:\\test\\1110.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(14, 16);
-        images[i] = helperLoadImage("C:\\test\\1111.bmp");
-        outcomes[i++] = convertDecimalTo1ofSizeArray(15, 16);
-        */
+
         //wlasciwe uczenie sieci
         for (i = 0; i < iterations; ++i) {
-            //inputManager.feedImage(structure[i % structure.length].getNextImage());
+            inputManager.feedImage(structure[i % structure.length].getNextImage());
             propagateSignalToOutput();
             introduceCorrections(structure[i%structure.length].getProperOutcome());
-            //if (allNeuronsHaveErrorLessThan(maxError))
-            //    break;
             if((errorSQ - maxError) <= 0.0)
                 break;
             if(i%100 == 0){
@@ -221,43 +199,46 @@ public class NetManager {
         System.out.println("Iteracji: "+i);
         compareError(maxError);
         controller.giveFeedback(i,errorSQ);
-//        for (int j = 0; j <= 15; ++j) {
-//            inputManager.feedImage(images[j]);
-//            propagateSignalToOutput();
-//            printResult(j);
-//        }
     }
 
     public String recognizeImage(BufferedImage image){
-       // inputManager.feedImage(image);
+        inputManager.feedImage(image);
         propagateSignalToOutput();
         return outputMappings[determineBestMatch()];
     }
-    private void printResult(int correct) {
-        int i;
-        double outcome[] = gatherOutputSignals();
-        i = 0;
-        int max = 0;
-        for (double d : outcome) {
-            if (d > outcome[max])
-                max = i;
-            i++;
-        }
-        System.out.println("########################################");
-        System.out.println(String.format("# %3s # %2d ## %2d # %.12f ######", (correct == max) ? "OK" : "NOT", correct, max, outcome[max]));
-        System.out.println("########################################");
-        if (DETAILS) {
-            i = 0;
-            ArrayList<INeuron> outputLayer = outputLayer();
-            for (double d : outcome) {
-                try {
-                    System.out.println(String.format("%2d | %.12f | %.12f", i, d, outputLayer.get(i++).getError()));
-                } catch (ErrorValueNotCalculatedException e) {
 
-                }
-            }
-            System.out.println("=-==================================================================");
+    public double[] getHiddenErrors(){
+        double[] errors = new double[hiddenLayer().size()];
+        int i =0;
+        try {
+            for (INeuron n : hiddenLayer())
+                errors[i++] = n.getError();
+        } catch (ErrorValueNotCalculatedException e) {
+            System.out.println("Podczas zczytywania błędów ukrytych");
+            System.out.println(e.getMessage());
         }
+        return errors;
+    }
+
+    public double[] getOutputErrors(){
+        double[] errors = new double[outputLayer().size()];
+        int i =0;
+        try {
+            for (INeuron n : outputLayer())
+                errors[i++] = n.getError();
+        } catch (ErrorValueNotCalculatedException e) {
+            System.out.println("Podczas zczytywania błędów wyjścia");
+            System.out.println(e.getMessage());
+        }
+        return errors;
+    }
+
+    static public int countDirectories(File[] files){
+        int count =0;
+        for(File f : files)
+            if(f.isDirectory())
+                count++;
+        return  count;
     }
 
     private void propagateSignalToOutput() {
@@ -281,23 +262,6 @@ public class NetManager {
             n.recalculateError(0); // passed value is not important since, in this layer correct value is calucated.
     }
 
-    private BufferedImage helperLoadImage(String path) {
-        BufferedImage img = null;
-        try {
-            img = ImageIO.read(new File(path));
-        } catch (IOException e) {
-            // TODO: error loading image, some communicate ?!
-            System.out.println(e.getStackTrace());
-        }
-        if (img.getWidth() != 200 || img.getWidth() != img.getHeight()) {
-            // TODO: niepoprawny plik został załadowany, poprawny rozmiar to 200x200 px,  obsłużyć to
-            throw new RuntimeException("Niepoprawna wielkość obrazka! " + path);
-        }
-        return img;
-    }
-
-
-
     private double[] gatherOutputSignals() {
         double output[] = new double[outputLayer().size()];
         int i = 0;
@@ -315,20 +279,6 @@ public class NetManager {
         return true;
     }
 
-    private double[] getError() {
-        int i = outputLayer().size();
-        double error[] = new double[i];
-        i = 0;
-        for (INeuron n : outputLayer()) {
-            try {
-                error[i++] = n.getError();
-            } catch (ErrorValueNotCalculatedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return error;
-    }
-
     private void compareError(double val) {
         double error[] = gatherOutputSignals();
         System.out.println("########################################");
@@ -338,31 +288,16 @@ public class NetManager {
         System.out.println("########################################");
     }
 
-    static public double[] getArrayWithOne(int i, int size){
-        double array[] = new double[size];
+    private double[] getArrayWithOne(int i, int size){
+        double array[] = new double[size+1];
         for(int j  =0; j < size; ++j)
             array[j] = 0f;
+        array[size]= 0f;
         array[i] = 1f;
         return array;
     }
 
-    private double[] convertDecimalTo1ofSizeArray(int number, int size) {
-        double array[] = new double[size];
-        for (int i = 0; i < size; ++i)
-            array[i] = 0d;
-        array[number] = 1d;
-        return array;
-    }
-
-    static public int countDirectories(File[] files){
-        int count =0;
-        for(File f : files)
-            if(f.isDirectory())
-                count++;
-        return  count;
-    }
-
-    static public File[] clearNonDirectories(File[] list, int numberOfDirectories){
+    private File[] clearNonDirectories(File[] list, int numberOfDirectories){
         File[] directories = new File[numberOfDirectories];
         int i=0;
         for(File f : list){

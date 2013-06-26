@@ -8,8 +8,6 @@ import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
-import org.neuroph.core.NeuralNetwork;
-import org.neuroph.nnet.Perceptron;
 import pl.polsl.bos.ann.*;
 
 public class Main extends Application {
